@@ -138,106 +138,101 @@ def video_info():
         logger.error(f"错误详情: {traceback.format_exc()}")
         return jsonify({'error': f'处理请求失败: {str(e)}'}), 500
 
+
 @app.route('/download', methods=['GET'])
 def download_video():
     try:
         url = request.args.get('url')
-        
         logger.info(f"下载请求 - URL: {url}")
-        
+
         if not url:
             logger.error("缺少 URL 参数")
             return jsonify({'error': '缺少必要的下载参数'}), 400
-        
+
         # 转换 URL 为 Twitter 域名
         twitter_url = url.replace('x.com', 'twitter.com')
-        
+
         def generate():
             try:
-                # 桌面路径
                 desktop_path = os.path.expanduser('~/Desktop')
-                
-                # 极简和高性能的 yt-dlp 配置
-                ydl_opts = {
-                    # 必须添加的配置
-                    'cookies': os.path.abspath('x_cookies.txt'),  # 从浏览器导出cookies
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                cookies_file = os.path.abspath('cookies.txt')
 
-                    'format': 'best[ext=mp4]',  # 选择最佳 MP4 格式
-                    'merge_output_format': 'mp4',
-                    'outtmpl': os.path.join(desktop_path, '%(title).80s.%(ext)s'),  # 缩短文件名
-                    
-                    # 性能优化
-                    'no_color': True,
-                    'quiet': True,  # 最小化日志
-                    'no_warnings': True,
-                    'nooverwrites': True,
-                    
-                    # 网络性能极致优化
-                    'socket_timeout': 5,  # 缩短超时
-                    'retries': 1,  # 减少重试
-                    'fragment_retries': 1,
-                    'concurrent_fragments': 16,  # 增加并发数
-                    'buffer_size': '16M',  # 增大缓冲区
-                    
-                    # 精简信息提取
-                    'extract_flat': True,
-                    
-                    # 最小化处理开销
-                    'no_mtime': True,
-                    'no_part': True,
-                    'ignoreerrors': True,
-                    
-                    # 进度钩子
-                    'progress_hooks': [
-                        lambda d: logger.info(f"下载进度: {d.get('_percent_str', 'N/A')}")
-                    ],
-                    
-                    # 后处理优化
-                    'postprocessors': [{
-                        'key': 'FFmpegVideoConvertor',
-                        'preferedformat': 'mp4',
-                    }],
-                    'postprocessor_args': ['-vcodec', 'libx264', '-acodec', 'aac', '-threads', '0', '-preset', 'ultrafast']
+                # 严格检查 cookies 文件
+                if not os.path.exists(cookies_file):
+                    logger.error(f"Cookies 文件未找到: {cookies_file}")
+                    yield f"data: {json.dumps({'error': 'Cookies 文件未找到'})}\n\n"
+                    return
+                else:
+                    logger.info(f"使用 Cookies 文件: {cookies_file}")
+
+                ydl_opts = {
+                    # 替换原来的 'cookies' 参数为以下两种方式之一：
+
+                    # 方式1：直接使用浏览器 cookies（推荐）
+                    # 'cookies_from_browser': ('chrome',),  # 自动从Chrome获取
+                    # 方式2：使用文件（确保格式正确）：
+                    'cookiefile': os.path.abspath('cookies.txt'),
+                    'cookiestyle': 'netscape',
+
+                    'format': 'best[ext=mp4]',
+                    'outtmpl': os.path.join(desktop_path, '%(title).80s.%(ext)s'),
+
+                    # 关键修复 1：禁用 extract_flat（否则无法解析视频）
+                    'extract_flat': False,
+
+                    # 关键修复 2：强制启用调试日志
+                    'quiet': False,
+
+                    # 网络优化
+                    'socket_timeout': 10,
+                    'retries': 3,
+                    'concurrent_fragments': 16,
+
+                    # 进度回调
+                    'progress_hooks': [lambda d: logger.info(
+                        f"进度: {d.get('_percent_str', 'N/A')} | 速度: {d.get('_speed_str', 'N/A')}"
+                    )],
+
+                    # 错误处理
+                    'ignoreerrors': False,
                 }
-                
+
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    logger.info(f"开始快速下载: {twitter_url}")
-                    
+                    logger.info(f"开始下载: {twitter_url}")
+
                     try:
-                        # 单步获取信息并下载
-                        info_dict = ydl.extract_info(twitter_url, download=True)
-                        
-                        # 准备文件路径
+                        # 关键修复 3：先获取信息再下载（分步调试）
+                        info_dict = ydl.extract_info(twitter_url, download=False)
+                        if not info_dict:
+                            logger.error("无法获取视频信息")
+                            yield f"data: {json.dumps({'error': '无法解析视频信息'})}\n\n"
+                            return
+
+                        logger.info(f"视频标题: {info_dict.get('title')}")
+
+                        # 开始下载
+                        ydl.download([twitter_url])
                         downloaded_file = ydl.prepare_filename(info_dict)
-                        
-                        # 快速检查文件
+
                         if os.path.exists(downloaded_file):
-                            file_size = os.path.getsize(downloaded_file)
-                            logger.info(f"视频已下载: {downloaded_file} ({file_size} 字节)")
-                            
-                            # 发送下载完成事件
-                            yield f"data: {json.dumps({'percent': 100, 'message': '下载完成', 'file': downloaded_file})}\n\n"
+                            yield f"data: {json.dumps({'percent': 100, 'file': downloaded_file})}\n\n"
                         else:
-                            logger.error(f"文件未找到: {downloaded_file}")
-                            yield f"data: {json.dumps({'error': '视频下载失败'})}\n\n"
-                    
-                    except Exception as e:
-                        logger.error(f"下载过程错误: {str(e)}")
-                        logger.error(f"错误追踪: {traceback.format_exc()}")
-                        yield f"data: {json.dumps({'error': str(e)})}\n\n"
-            
+                            logger.error("文件未生成，可能下载中断")
+                            yield f"data: {json.dumps({'error': '文件生成失败'})}\n\n"
+
+                    except yt_dlp.utils.DownloadError as e:
+                        logger.error(f"下载错误: {str(e)}")
+                        yield f"data: {json.dumps({'error': f'下载失败: {str(e)}'})}\n\n"
+
             except Exception as e:
-                logger.error(f"处理过程未知错误: {str(e)}")
-                logger.error(f"错误追踪: {traceback.format_exc()}")
+                logger.error(f"处理错误: {traceback.format_exc()}")
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
-        
+
         return Response(generate(), mimetype='text/event-stream')
-    
+
     except Exception as e:
-        logger.error(f"请求处理错误: {str(e)}")
-        logger.error(f"错误追踪: {traceback.format_exc()}")
-        return jsonify({'error': f'处理下载请求失败: {str(e)}'}), 500
+        logger.error(f"全局错误: {traceback.format_exc()}")
+        return jsonify({'error': '服务器处理错误'}), 500
 
 @app.route('/test')
 def test():

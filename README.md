@@ -42,6 +42,27 @@ source venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 ```
 
+## 提取cookies
+### 选择一个浏览器登录你的X账号
+```shell
+# edge浏览器提取cookies
+yt-dlp --cookies-from-browser edge --cookies cookies.txt
+# chrome浏览器提取cookies
+yt-dlp --cookies-from-browser chrome --cookies cookies.txt
+# 测试你生成的cookies
+yt-dlp --cookies cookies.txt "https://x.com/kedaibiaozzz_/status/1904109099547349245?s=46"
+```
+
+### 这是不用保存 cookies 文件直接命令下载
+```shell
+# chrome浏览器
+yt-dlp --cookies-from-browser chrome "https://x.com/kedaibiaozzz_/status/1904109099547349245?s=46"
+# edge浏览器
+yt-dlp --cookies-from-browser edge "https://x.com/kedaibiaozzz_/status/1904109099547349245?s=46"
+```
+
+请确保提取cookies的测试步骤可用跑通, 后面才进入程序
+
 ## 运行应用
 ```bash
 python app.py
