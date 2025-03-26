@@ -159,6 +159,10 @@ def download_video():
                 
                 # 极简和高性能的 yt-dlp 配置
                 ydl_opts = {
+                    # 必须添加的配置
+                    'cookies': os.path.abspath('x_cookies.txt'),  # 从浏览器导出cookies
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+
                     'format': 'best[ext=mp4]',  # 选择最佳 MP4 格式
                     'merge_output_format': 'mp4',
                     'outtmpl': os.path.join(desktop_path, '%(title).80s.%(ext)s'),  # 缩短文件名

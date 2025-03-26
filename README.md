@@ -32,7 +32,7 @@ cd x-video-downloader
 
 ### 创建虚拟环境
 ```bash
-python -m venv venv
+python3 -m venv venv
 .\venv\Scripts\activate  # Windows
 source venv/bin/activate  # macOS/Linux
 ```
