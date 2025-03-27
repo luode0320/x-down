@@ -1,5 +1,5 @@
 # 使用一个基础的Python镜像
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 
 # 使用绝对路径（如/app）
@@ -14,8 +14,11 @@ RUN ls -la /app
 # 验证当前工作目录
 RUN pwd
 
-# 直接全局安装依赖（容器本身就是隔离环境）
-RUN pip install --no-cache-dir -r requirements.txt
+# 安装所需的依赖项
+RUN python3 -m venv venv \
+    && . venv/bin/activate \
+    && pip install --no-cache-dir -r requirements.txt
 
-# 在每次启动时运行 Python 脚本
-CMD ["python", "main.py"]
+
+# 必须使用虚拟环境的绝对路径
+CMD ["/venv/bin/python", "main.py"]
