@@ -15,7 +15,6 @@ RUN ls -la /app
 RUN pwd
 
 # 安装所需的依赖项
-RUN apt-get update && apt-get install -y python3 python3-pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "luode/main.py"]
+CMD ["python", "main.py"]
