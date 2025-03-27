@@ -5,7 +5,8 @@ FROM python:3.9-slim
 # 使用绝对路径（如/app）
 WORKDIR /app
 
-# 后续操作会自动在/app下执行
+# 复制文件（注意第一个.是宿主机当前目录，第二个.是容器的/app）
+RUN chmod -R 777 .
 COPY . .
 RUN ls -l
 
@@ -14,7 +15,6 @@ RUN python3 -m venv venv \
     && . venv/bin/activate \
     && pip install --no-cache-dir -r requirements.txt
 
-RUN chmod -R 777 .
 
 # 在每次启动时运行 Python 脚本
 CMD ["python", "app.py"]
