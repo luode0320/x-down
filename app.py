@@ -4,6 +4,7 @@ import sys
 import subprocess
 import json
 import traceback
+import schedule
 import re
 import yt_dlp
 from flask import Flask, request, jsonify, render_template
@@ -25,7 +26,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-ARIA2C_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aria2', 'aria2-1.36.0-win-64bit-build1', 'aria2c.exe')
 PROXY = None
 
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
@@ -35,6 +35,19 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 if CORS:
     CORS(app)
 
+# 删除data_dir下所有文件的函数
+def clean_data_dir():
+    try:
+        for filename in os.listdir(data_dir):
+            file_path = os.path.join(data_dir, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+                logger.info(f"已删除文件: {file_path}")
+    except Exception as e:
+        logger.error(f"清理目录时出错: {str(e)}")
+
+# 每小时清理一次
+schedule.every().hour.do(clean_data_dir)
 
 @app.route('/')
 def index():

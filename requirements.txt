@@ -3,3 +3,4 @@ yt-dlp==2025.03.26
 requests==2.31.0
 browser-cookie3==0.19.1
 flask-cors==4.0.0
+schedule==1.2.2
