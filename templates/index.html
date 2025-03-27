@@ -124,7 +124,6 @@
                 return;
             }
 
-            // 禁用按钮并显示加载状态
             downloadButton.disabled = true;
             downloadButton.innerHTML = '正在准备下载...';
             progressContainer.style.display = 'block';
@@ -135,32 +134,42 @@
             source.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.percent) {
-                    // 平滑进度条动画
                     requestAnimationFrame(() => {
                         progressBar.style.width = `${data.percent}%`;
                         downloadButton.innerHTML = `下载中 ${data.percent}%`;
                     });
-                    
-                    if (data.percent === 100) {
+
+                    if (data.percent === 100 && data.filename) {
                         source.close();
+                        // 触发文件下载
+                        const downloadUrl = `http://127.0.0.1:5000/get_file/${encodeURIComponent(data.filename)}`;
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = data.filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
                         setTimeout(() => {
                             downloadButton.disabled = false;
-                            downloadButton.innerHTML = '下载完成！';
-                            alert('视频已保存到桌面');
+                            downloadButton.innerHTML = '立即下载';
+                            progressContainer.style.display = 'none';
                         }, 500);
                     }
                 } else if (data.error) {
                     source.close();
                     downloadButton.disabled = false;
                     downloadButton.innerHTML = '立即下载';
+                    progressContainer.style.display = 'none';
                     alert(data.error);
                 }
             };
 
             source.onerror = function() {
                 source.close();
-                downloadButton.disabled = false;
+                hakkdownloadButton.disabled = false;
                 downloadButton.innerHTML = '立即下载';
+                progressContainer.style.display = 'none';
                 alert('下载出错，请检查网络或重试');
             };
         }
