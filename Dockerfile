@@ -9,9 +9,9 @@ WORKDIR /app
 COPY . /app
 
 # 安装所需的依赖项
-RUN python3 -m venv venv
-RUN source venv/bin/activate
-RUN pip install -r requirements.txt
+RUN python3 -m venv venv \
+    && . venv/bin/activate \
+    && pip install --no-cache-dir -r requirements.txt
 
 RUN chmod -R 777 .
 
