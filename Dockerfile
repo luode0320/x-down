@@ -17,4 +17,4 @@ RUN pwd
 # 安装所需的依赖项
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "./main.py"]
+CMD ["python", "luode/main.py"]
