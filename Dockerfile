@@ -1,5 +1,5 @@
 # 使用一个基础的Python镜像
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 
 # 使用绝对路径（如/app）
