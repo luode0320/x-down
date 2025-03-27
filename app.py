@@ -33,7 +33,7 @@ os.makedirs(data_dir, exist_ok=True)
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 if CORS:
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})  # 允许所有域
 
 # 删除data_dir下所有文件的函数
 def clean_data_dir():
@@ -161,12 +161,7 @@ if __name__ == '__main__':
         logger.addHandler(file_handler)
 
         print("开始运行应用...")
-        app.run(
-            host='0.0.0.0',
-            port=5000,
-            debug=True,
-            use_reloader=False
-        )
+        app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
     except Exception as e:
         print(f"启动失败，错误信息: {e}")
         print(f"详细错误追踪: {traceback.format_exc()}")
