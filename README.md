@@ -10,25 +10,7 @@
 - 实时下载进度
 - 简洁的 Web 界面
 
-## 技术栈
-- Python 3.10+
-- Flask
-- yt-dlp
-- HTML5
-- JavaScript
-
 ## 安装步骤
-
-### 前提条件
-- Python 3.10 或更高版本
-- pip
-- FFmpeg
-
-### 克隆仓库
-```bash
-git clone https://github.com/yourusername/x-video-downloader.git
-cd x-video-downloader
-```
 
 ### 创建虚拟环境
 ```bash
@@ -53,19 +35,11 @@ yt-dlp --cookies-from-browser chrome --cookies cookies.txt
 yt-dlp --cookies cookies.txt "https://x.com/kedaibiaozzz_/status/1904109099547349245?s=46"
 ```
 
-### 这是不用保存 cookies 文件直接命令下载
-```shell
-# chrome浏览器
-yt-dlp --cookies-from-browser chrome "https://x.com/kedaibiaozzz_/status/1904109099547349245?s=46"
-# edge浏览器
-yt-dlp --cookies-from-browser edge "https://x.com/kedaibiaozzz_/status/1904109099547349245?s=46"
-```
-
 请确保提取cookies的测试步骤可用跑通, 后面才进入程序
 
 ## 运行应用
 ```bash
-python app.py
+python3 app.py
 ```
 
 访问 `http://localhost:5000`
