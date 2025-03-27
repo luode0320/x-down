@@ -39,10 +39,10 @@ yt-dlp --cookies cookies.txt "https://x.com/kedaibiaozzz_/status/190410909954734
 
 ## 运行应用
 ```bash
-python3 app.py
+python app.py
 ```
 
-访问 `http://localhost:5000`
+访问 `http://localhost:7777`
 
 ## 使用方法
 1. 打开网页
