@@ -1,5 +1,5 @@
 # 使用一个基础的Python镜像
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 
 # 使用绝对路径（如/app）
@@ -17,8 +17,4 @@ RUN pwd
 # 安装所需的依赖项
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 在CMD前添加验证
-RUN ls -la /app/main.py && file /app/main.py
-
-# 必须使用虚拟环境的绝对路径
 CMD ["python", "main.py"]
