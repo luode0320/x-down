@@ -129,7 +129,7 @@
             progressContainer.style.display = 'block';
             progressBar.style.width = '0%';
 
-            const source = new EventSource(`http://127.0.0.1:7777/download?url=${encodeURIComponent(videoUrl)}`);
+            const source = new EventSource(`http://127.0.0.1:5000/download?url=${encodeURIComponent(videoUrl)}`);
 
             source.onmessage = function(event) {
                 const data = JSON.parse(event.data);
@@ -142,7 +142,7 @@
                     if (data.percent === 100 && data.filename) {
                         source.close();
                         // 触发文件下载
-                        const downloadUrl = `http://127.0.0.1:7777/get_file/${encodeURIComponent(data.filename)}`;
+                        const downloadUrl = `http://127.0.0.1:5000/get_file/${encodeURIComponent(data.filename)}`;
                         const link = document.createElement('a');
                         link.href = downloadUrl;
                         link.download = data.filename;
