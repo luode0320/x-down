@@ -1,14 +1,12 @@
 import logging
 import os
 import sys
-import subprocess
 import json
 import traceback
 import schedule
-import re
 import yt_dlp
 from flask import Flask, request, jsonify, render_template
-from flask import send_from_directory, Response, send_file
+from flask import Response, send_file
 
 try:
     from flask_cors import CORS
