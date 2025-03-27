@@ -150,7 +150,6 @@ if __name__ == '__main__':
 
     try:
         import flask
-
         print(f"Flask 版本: {flask.__version__}")
         print("尝试配置应用...")
 
