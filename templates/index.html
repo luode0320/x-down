@@ -130,7 +130,7 @@
             progressContainer.style.display = 'block';
             progressBar.style.width = '0%';
 
-            const source = new EventSource(`/download?url=${encodeURIComponent(videoUrl)}`);
+            const source = new EventSource(`http://127.0.0.1:5000/download?url=${encodeURIComponent(videoUrl)}`);
 
             source.onmessage = function(event) {
                 const data = JSON.parse(event.data);
