@@ -1,7 +1,13 @@
 # 使用一个基础的Python镜像
 FROM python:3.9-slim
 
-WORKDIR .
+
+# 使用绝对路径（如/app）
+WORKDIR /app
+
+# 后续操作会自动在/app下执行
+COPY . .
+RUN ls -l
 
 # 安装所需的依赖项
 RUN python3 -m venv venv \
