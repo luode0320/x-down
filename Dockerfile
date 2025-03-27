@@ -21,4 +21,4 @@ RUN python3 -m venv venv \
 
 
 # 在每次启动时运行 Python 脚本
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]

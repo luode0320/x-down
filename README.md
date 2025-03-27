@@ -39,7 +39,7 @@ yt-dlp --cookies cookies.txt "https://x.com/kedaibiaozzz_/status/190410909954734
 
 ## 运行应用
 ```bash
-python app.py
+python main.py
 ```
 
 访问 `http://localhost:7777`
