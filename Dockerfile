@@ -6,9 +6,11 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # 复制文件（注意第一个.是宿主机当前目录，第二个.是容器的/app）
-RUN chmod -R 777 .
 COPY . .
-RUN ls -l
+# 验证文件是否复制成功
+RUN ls -la /app
+# 验证当前工作目录
+RUN pwd
 
 # 安装所需的依赖项
 RUN python3 -m venv venv \
