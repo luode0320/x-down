@@ -14,6 +14,7 @@ RUN python3 -m venv venv \
     && pip install --no-cache-dir -r requirements.txt
 
 RUN chmod -R 777 .
+RUN chmod -R 777 /app
 
 # 在每次启动时运行 Python 脚本
 CMD ["python", "app.py"]
