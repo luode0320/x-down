@@ -15,6 +15,8 @@ RUN ls -la /app
 RUN pwd
 
 # 安装所需的依赖项
+RUN apt-get update
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "main.py"]
