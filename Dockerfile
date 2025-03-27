@@ -1,5 +1,5 @@
 # 使用一个基础的Python镜像
-FROM python:3.10
+FROM python:3.9-slim
 
 
 # 使用绝对路径（如/app）
@@ -15,6 +15,7 @@ RUN ls -la /app
 RUN pwd
 
 # 安装所需的依赖项
+RUN apt-get update && apt-get install -y python3 python3-pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "luode/main.py"]
