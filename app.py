@@ -145,14 +145,6 @@ def download_video():
         return jsonify({'error': '服务器处理错误'}), 500
 
 
-def extract_video_id(url):
-    # 使用正则表达式提取 Twitter/X 视频 ID
-    match = re.search(r'/status/(\d+)', url)
-    if match:
-        return match.group(1)
-    return None
-
-
 if __name__ == '__main__':
     print("启动 Flask 应用...")
     print(f"Python 版本: {sys.version}")
