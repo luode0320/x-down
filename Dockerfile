@@ -1,5 +1,5 @@
 # 使用一个基础的Python镜像
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 
 # 使用绝对路径（如/app）
@@ -7,6 +7,7 @@ WORKDIR /app
 
 # 复制文件（注意第一个.是宿主机当前目录，第二个.是容器的/app）
 COPY . .
+COPY ./main.py /app/main.py
 # 权限
 RUN chmod -R 777 /app
 # 验证文件是否复制成功
