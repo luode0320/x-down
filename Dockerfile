@@ -15,10 +15,10 @@ RUN ls -la /app
 RUN pwd
 
 # 安装所需的依赖项
-RUN python3 -m venv venv \
-    && . venv/bin/activate \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
+# 在CMD前添加验证
+RUN ls -la /app/main.py && file /app/main.py
 
 # 必须使用虚拟环境的绝对路径
-CMD ["/venv/bin/python", "main.py"]
+CMD ["python", "main.py"]
