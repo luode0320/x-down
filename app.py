@@ -33,6 +33,10 @@ ARIA2C_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aria2', 
 # 设置代理，如果需要的话
 PROXY = None
 
+# 在函数顶部添加（或替换原有temp_dir定义）
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+os.makedirs(data_dir, exist_ok=True)  # 确保目录存在
+
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 if CORS:
     CORS(app)  # 启用 CORS
@@ -44,99 +48,6 @@ def index():
     except Exception as e:
         logger.error(f"Error rendering template: {str(e)}")
         return f"Error: {str(e)}", 500
-
-@app.route('/video_info', methods=['GET', 'POST'])
-def video_info():
-    logger.debug(f"收到视频信息请求，方法: {request.method}")
-    logger.debug(f"请求参数: {request.args}")
-    logger.debug(f"请求表单: {request.form}")
-
-    try:
-        if request.method == 'POST':
-            url = request.form.get('url')
-        else:
-            url = request.args.get('url')
-        
-        logger.debug(f"解析出的 URL: {url}")
-            
-        if not url:
-            logger.error("未提供视频链接")
-            return jsonify({'error': '请提供视频链接'}), 400
-
-        logger.info(f"请求视频信息的 URL: {url}")
-        try:
-            logger.info("开始提取视频 ID...")
-            video_id = extract_video_id(url)
-            if not video_id:
-                logger.error("未能提取视频 ID")
-                logger.error(f"视频链接：{url}")
-                return jsonify({'error': '无效的视频链接'}), 400
-            logger.info(f"成功提取视频 ID: {video_id}")
-            logger.info("开始获取视频信息...")
-            try:
-                # 使用 yt-dlp 获取详细的格式信息
-                ydl_opts = {
-                    'quiet': False,  # 改为 False 以获取更多信息
-                    'no_warnings': False,  # 改为 False 以获取警告信息
-                    'no_color': True,
-                    'extract_flat': False,  # 改为 False 以获取完整信息
-                    'format': 'best'  # 确保获取最佳格式
-                }
-                
-                # 转换 URL 为 Twitter 域名
-                twitter_url = url.replace('x.com', 'twitter.com')
-                
-                try:
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        logger.debug(f"开始使用 yt-dlp 提取 {twitter_url} 的信息")
-                        info_dict = ydl.extract_info(twitter_url, download=False)
-                        
-                        logger.debug(f"成功获取视频信息字典: {info_dict.keys()}")
-                        
-                        # 处理格式信息
-                        formats = []
-                        if 'formats' in info_dict:
-                            for fmt in info_dict['formats']:
-                                # 只保留视频格式
-                                if fmt.get('vcodec', 'none') != 'none':
-                                    format_info = {
-                                        'format_id': fmt.get('format_id', ''),
-                                        'resolution': f"{fmt.get('width', 0)}x{fmt.get('height', 0)}",
-                                        'ext': fmt.get('ext', 'mp4'),
-                                        'filesize': fmt.get('filesize', 0) or 0,
-                                        'tbr': fmt.get('tbr', 0)  # 总比特率
-                                    }
-                                    formats.append(format_info)
-                        
-                        # 按分辨率排序
-                        formats.sort(key=lambda x: int(x['resolution'].split('x')[1]) if 'x' in x['resolution'] else 0, reverse=True)
-                        
-                        video_data = {
-                            'title': info_dict.get('title', f'Twitter Video {video_id}'),
-                            'formats': formats
-                        }
-                        
-                        logger.info(f"成功获取视频信息: {video_data}")
-                        return jsonify(video_data)
-                
-                except Exception as extract_error:
-                    logger.error(f"yt-dlp 提取信息失败: {str(extract_error)}")
-                    logger.error(f"错误详情: {traceback.format_exc()}")
-                    return jsonify({'error': f'无法获取视频信息: {str(extract_error)}'}), 500
-            
-            except Exception as e:
-                logger.error(f"获取视频信息时发生错误: {str(e)}")
-                logger.error(f"错误详情: {traceback.format_exc()}")
-                return jsonify({'error': f'获取视频信息失败: {str(e)}'}), 500
-        except Exception as e:
-            logger.error(f"获取视频信息时发生错误: {str(e)}")
-            logger.error(f"错误详情: {traceback.format_exc()}")
-            return jsonify({'error': f'获取视频信息失败: {str(e)}'}), 500
-    
-    except Exception as e:
-        logger.error(f"处理视频信息请求时发生错误: {str(e)}")
-        logger.error(f"错误详情: {traceback.format_exc()}")
-        return jsonify({'error': f'处理请求失败: {str(e)}'}), 500
 
 
 @app.route('/download', methods=['GET'])
@@ -154,7 +65,6 @@ def download_video():
 
         def generate():
             try:
-                desktop_path = os.path.expanduser('~/Desktop')
                 cookies_file = os.path.abspath('cookies.txt')
 
                 # 严格检查 cookies 文件
@@ -175,7 +85,7 @@ def download_video():
                     'cookiestyle': 'netscape',
 
                     'format': 'best[ext=mp4]',
-                    'outtmpl': os.path.join(desktop_path, '%(title).80s.%(ext)s'),
+                    'outtmpl': os.path.join(data_dir, '%(title).80s.%(ext)s'),
 
                     # 关键修复 1：禁用 extract_flat（否则无法解析视频）
                     'extract_flat': False,
@@ -234,9 +144,6 @@ def download_video():
         logger.error(f"全局错误: {traceback.format_exc()}")
         return jsonify({'error': '服务器处理错误'}), 500
 
-@app.route('/test')
-def test():
-    return "Hello, this is a test page!"
 
 def extract_video_id(url):
     # 使用正则表达式提取 Twitter/X 视频 ID
@@ -245,14 +152,6 @@ def extract_video_id(url):
         return match.group(1)
     return None
 
-def get_video_data(url):
-    # 这里是获取视频信息的逻辑
-    # 假设我们返回一个模拟的视频数据
-    return {
-        'title': '示例视频',
-        'description': '这是一个示例视频描述',
-        'url': url
-    }
 
 if __name__ == '__main__':
     print("启动 Flask 应用...")
