@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 # 验证文件复制结果（调试用）
+RUN chmod 755 -R /app
 RUN ls -la /app && pwd
 
 # 设置启动命令
