@@ -70,7 +70,10 @@ def download_video():
 
         def generate():
             try:
-                cookies_file = os.path.abspath('cookies.txt')
+                # 获取脚本所在目录的绝对路径
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                # 动态拼接目标文件路径
+                cookies_file = os.path.join(script_dir, 'config', 'cookies.txt')
 
                 if not os.path.exists(cookies_file):
                     logger.error(f"Cookies 文件未找到: {cookies_file}")
@@ -80,7 +83,7 @@ def download_video():
                     logger.info(f"使用 Cookies 文件: {cookies_file}")
 
                 ydl_opts = {
-                    'cookiefile': os.path.abspath('cookies.txt'),
+                    'cookiefile': cookies_file,
                     'cookiestyle': 'netscape',
                     'format': 'best[ext=mp4]',
                     'outtmpl': os.path.join(data_dir, '%(title).80s.%(ext)s'),
