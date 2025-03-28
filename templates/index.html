@@ -189,11 +189,8 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-
-                    setTimeout(() => {
-                        downloadButton.disabled = false;
-                        downloadButton.innerHTML = '立即下载';
-                    }, 500);
+                    downloadButton.disabled = false;
+                    downloadButton.innerHTML = '立即下载';
                 } else if (data.error) {
                     source.close();
                     downloadButton.disabled = false;

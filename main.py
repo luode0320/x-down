@@ -126,14 +126,22 @@ def download_video():
                         speed = d.get('_speed_str', 'N/A').strip()
                         eta = d.get('_eta_str', 'N/A').strip()
 
+                        # 将速度从 MiB/s 转换为 MB/s
+                        try:
+                            speed_in_mib = float(speed.replace("MiB/s", "").strip())
+                            speed_in_mb = speed_in_mib * (1024 * 1024) / (1000 * 1000)
+                            speed_formatted = f"{speed_in_mb:.2f} MB/s"  # 格式化为两位小数
+                        except ValueError:
+                            speed_formatted = "0.00 MB/s"
+
                         # 打印进度到后台日志
-                        logger.info(f"下载进度: {percent}, 速度: {speed}, 剩余时间: {eta}")
+                        logger.info(f"下载进度: {percent}, 速度: {speed_formatted}, 剩余时间: {eta}")
 
                         # 将进度信息放入队列
                         progress_data = json.dumps({
                             'status': 'downloading',
                             'percent': percent,
-                            'speed': speed,
+                            'speed': speed_formatted,
                             'eta': eta,
                         })
                         progress_queue.put(f"data: {progress_data}\n\n")
