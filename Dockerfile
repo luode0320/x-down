@@ -5,13 +5,14 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # 复制所有文件到容器（包括main.py）
-COPY . .
+COPY requirements.txt /app/requirements.txt
 
 # 安装依赖（此时文件名为main.txt）
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY . /app
 # 验证文件复制结果（调试用）
 RUN ls -la /app && pwd
 
 # 设置启动命令
-CMD ["python", "main.py"]
+CMD ["python", "/app/main.py"]
