@@ -17,5 +17,8 @@ RUN chmod 755 -R /app
 RUN echo "Listing files in /app:" && ls -la /app
 RUN cat /app/main.py  # 确保文件内容可以读取
 
+# 检查文件编码是否是 UTF-8，并且没有 BOM
+RUN file -bi /app/main.py
+
 # 设置启动命令
-CMD ["python", "main.py"]
+CMD ["python", "/app/main.py"]
