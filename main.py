@@ -5,6 +5,8 @@ import json
 import traceback
 import schedule
 import yt_dlp
+import time
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template
 from flask import Response, send_file
 
@@ -36,13 +38,22 @@ if CORS:
 # 删除data_dir下所有文件的函数
 def clean_data_dir():
     try:
+        # 获取当前时间
+        current_time = time.time()
+        one_hour_ago = current_time - 3600  # 一小时前的时间戳（3600秒 = 1小时）
+
         for filename in os.listdir(data_dir):
             file_path = os.path.join(data_dir, filename)
             if os.path.isfile(file_path):
-                os.remove(file_path)
-                logger.info(f"已删除文件: {file_path}")
+                # 获取文件的创建时间或修改时间
+                file_timestamp = os.path.getctime(file_path)  # 或者使用 os.path.getmtime(file_path)
+                # 如果文件时间戳早于一小时前，则删除
+                if file_timestamp < one_hour_ago:
+                    os.remove(file_path)
+                    logger.info(f"已删除文件: {file_path} (创建时间: {datetime.fromtimestamp(file_timestamp)})")
     except Exception as e:
         logger.error(f"清理目录时出错: {str(e)}")
+
 
 # 每小时清理一次
 schedule.every().hour.do(clean_data_dir)

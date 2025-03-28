@@ -38,6 +38,7 @@
         }
 
         .input-container {
+            position: relative; /* 容器设置为相对定位 */
             background: #192734;
             padding: 20px;
             border-radius: 15px;
@@ -45,8 +46,9 @@
         }
 
         input[type="text"] {
-            width: 100%;
+            width: 100%; /* 占满整个容器 */
             padding: 15px;
+            padding-right: 50px; /* 留出空间给按钮 */
             margin-bottom: 20px;
             border: 2px solid #253341;
             background: #253341;
@@ -98,6 +100,30 @@
             transition: width 0.3s ease;
         }
 
+
+        /* 粘贴按钮样式 */
+        .paste-btn {
+            position: absolute;
+            right: 30px; /* 按钮距离右侧的距离 */
+            top: 40%; /* 垂直居中 */
+            transform: translateY(-50%);
+            background: #3b6785;
+            color: #fff;
+            border: none;
+            padding: 8px 12px; /* 调整内边距以控制按钮大小 */
+            border-radius: 8px; /* 设置较小的圆角，或者直接删除此行以完全变为方形 */
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: auto; /* 自动宽度 */
+            height: auto; /* 自动高度 */
+        }
+        .paste-btn:hover {
+            background: #1a8cd8;
+        }
+
         /* 响应式样式 */
         @media (max-width: 600px) {
             h1 {
@@ -121,21 +147,36 @@
 
         <div class="input-container">
             <input type="text" id="videoUrl" placeholder="输入 X/Twitter 视频链接" required>
-            <button onclick="downloadVideo()">立即下载</button>
+            <button class="paste-btn" onclick="pasteFromClipboard()">粘贴</button>
             <div id="progress">
                 <div class="progress-bar">
                     <div class="progress-fill"></div>
                 </div>
             </div>
         </div>
+        <button class="down-btn" onclick="downloadVideo()">立即下载</button>
     </div>
 
     <script>
+        // 粘贴功能
+        async function pasteFromClipboard() {
+            try {
+                const clipboardText = await navigator.clipboard.readText();
+                if (clipboardText.trim() !== "") { // 检查剪贴板内容是否为空
+                    document.getElementById('videoUrl').value = clipboardText; // 将内容填充到输入框
+                    downloadVideo(); // 调用下载函数
+                }
+            } catch (err) {
+                alert('无法读取剪贴板内容，请手动粘贴。');
+            }
+        }
+
+        // 下载功能
         function downloadVideo() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             const progressBar = document.querySelector('.progress-fill');
             const progressContainer = document.getElementById('progress');
-            const downloadButton = document.querySelector('button');
+            const downloadButton = document.querySelector('.down-btn');
 
             if (!videoUrl) {
                 alert('请输入视频链接');
