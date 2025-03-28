@@ -1,19 +1,19 @@
-# 使用一个基础的Python镜像
 FROM python:3.10
 
-# 使用绝对路径（如/app）
+# 设置工作目录
 WORKDIR /app
 
-# 复制文件（注意第一个.是宿主机当前目录，第二个.是容器的/app）
+# 复制文件（分阶段复制优化构建缓存）
+COPY requirements.txt .
 COPY . .
-# 权限
-RUN chmod -R 777 /app
-# 验证文件是否复制成功
-RUN ls -la /app
-# 验证当前工作目录
-RUN pwd
 
-# 安装所需的依赖项
-RUN pip install --no-cache-dir -r requirements.txt
+# 创建并激活虚拟环境（使用绝对路径）
+RUN python -m venv /venv && \
+    /venv/bin/pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "main.py"]
+# 设置安全权限（替代危险的777）
+RUN find /app -type d -exec chmod 755 {} \; && \
+    find /app -type f -exec chmod 644 {} \;
+
+# 使用虚拟环境的Python解释器执行
+CMD ["/venv/bin/python", "main.py"]
