@@ -1,8 +1,8 @@
 # 使用基础Python镜像
 FROM python:3.9-slim-buster
 
-# 安装 file 命令
-RUN apt-get update && apt-get install -y file
+# 安装 file 和 xxd 工具
+RUN apt-get update && apt-get install -y file vim-common
 
 # 代码添加到文件夹
 ADD . /app
