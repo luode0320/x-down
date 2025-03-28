@@ -33,5 +33,10 @@ jobs:
           script: | # 远程服务器依次执行下面的命令, 删除容器, 删除镜像, 拉取最新镜像, 启动容器 
             docker rm -fv x-down
             docker rmi luode0320/x-down:latest
-            docker run -d -p 7777:7777 --network host --restart=always -v /usr/local/src/x-down:/app/config -v /usr/local/src/x-down/data:/app/data --name x-down -w /app luode0320/x-down:latest
-
+            docker run -d \
+            --network host \
+            --restart=always \
+            -v /usr/local/src/x-down:/app/config \
+            -v /usr/local/src/x-down/data:/app/data \
+            --name x-down  \
+            luode0320/x-down:latest
