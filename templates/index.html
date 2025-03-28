@@ -155,22 +155,16 @@
     <script>
         // 粘贴功能
         async function pasteFromClipboard() {
-            try {
-                const clipboardText = await navigator.clipboard.readText();
-                if (clipboardText.trim() !== "") { // 检查剪贴板内容是否为空
-                    document.getElementById('videoUrl').value = clipboardText; // 将内容填充到输入框
-                    downloadVideo(); // 调用下载函数
-                }
-            } catch (err) {
-                alert('无法读取剪贴板内容，请手动粘贴。');
+            const clipboardText = await navigator.clipboard.readText();
+            if (clipboardText.trim() !== "") { // 检查剪贴板内容是否为空
+                document.getElementById('videoUrl').value = clipboardText; // 将内容填充到输入框
+                downloadVideo(); // 调用下载函数
             }
         }
 
         // 下载功能
         function downloadVideo() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
-            const progressBar = document.querySelector('.progress-fill');
-            const progressContainer = document.getElementById('progress');
             const downloadButton = document.querySelector('.down-btn');
 
             if (!videoUrl) {
@@ -180,8 +174,6 @@
 
             downloadButton.disabled = true;
             downloadButton.innerHTML = '正在下载...';
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
 
             const source = new EventSource(`https://x.luode.vip/download?url=${encodeURIComponent(videoUrl)}`);
 
@@ -189,7 +181,6 @@
                 const data = JSON.parse(event.data);
                 if (data.percent) {
                     requestAnimationFrame(() => {
-                        progressBar.style.width = `${data.percent}%`;
                         downloadButton.innerHTML = `下载中 ${data.percent}%`;
                     });
 
@@ -207,14 +198,12 @@
                         setTimeout(() => {
                             downloadButton.disabled = false;
                             downloadButton.innerHTML = '立即下载';
-                            progressContainer.style.display = 'none';
                         }, 500);
                     }
                 } else if (data.error) {
                     source.close();
                     downloadButton.disabled = false;
                     downloadButton.innerHTML = '立即下载';
-                    progressContainer.style.display = 'none';
                     alert(data.error);
                 }
             };
@@ -223,7 +212,6 @@
                 source.close();
                 downloadButton.disabled = false;
                 downloadButton.innerHTML = '立即下载';
-                progressContainer.style.display = 'none';
                 alert('下载出错，请检查网络或重试');
             };
         }
