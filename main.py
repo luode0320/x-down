@@ -35,9 +35,27 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 if CORS:
     CORS(app, resources={r"/*": {"origins": "*"}})  # 允许所有域
 
+# 计算文件夹总大小的函数
+def get_folder_size(folder_path):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        for file in filenames:
+            file_path = os.path.join(dirpath, file)
+            if os.path.isfile(file_path):
+                total_size += os.path.getsize(file_path)  # 累加文件大小
+    return total_size
+
 # 删除data_dir下所有文件的函数
 def clean_data_dir():
     try:
+        # 计算文件夹总大小（以字节为单位）
+        folder_size = get_folder_size(data_dir)
+        one_gb = 1 * 1024 * 1024 * 1024  # 1GB 的字节数
+
+        # 如果文件夹大小未超过 1GB，则跳过清理
+        if folder_size <= one_gb:
+            return
+
         # 获取当前时间
         current_time = time.time()
         one_hour_ago = current_time - 3600  # 一小时前的时间戳（3600秒 = 1小时）
