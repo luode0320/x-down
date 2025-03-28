@@ -17,4 +17,4 @@ RUN chmod 755 -R /app
 RUN ls -la /app && pwd
 
 # 设置启动命令
-CMD python /app/main.py
+CMD python3 /app/main.py
