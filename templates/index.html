@@ -199,7 +199,7 @@
                     alert(data.error);
                 } else {
                     requestAnimationFrame(() => {
-                        downloadButton.innerHTML = `下载中 ${data.percent}, 速度: ${data.speed}, 剩余时间: ${data.eta}`;
+                        downloadButton.innerHTML = `下载中 ${data.percent}, 速度: ${data.speed}, 剩余时间: ${data.eta}<br>视频大小: ${data.size}`;
                     });
                 }
             };

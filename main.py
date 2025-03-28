@@ -125,6 +125,11 @@ def download_video():
                         percent = d.get('_percent_str', 'N/A').strip()
                         speed = d.get('_speed_str', 'N/A').strip()
                         eta = d.get('_eta_str', 'N/A').strip()
+                        total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
+
+                        file_size_mb = 'N/A'
+                        if total_bytes:
+                            file_size_mb = f"{total_bytes / (1024 * 1024):.2f} MB"
 
                         # 将速度从 MiB/s 转换为 MB/s
                         try:
@@ -135,7 +140,7 @@ def download_video():
                             speed_formatted = "0.00 MB/s"
 
                         # 打印进度到后台日志
-                        logger.info(f"下载进度: {percent}, 速度: {speed_formatted}, 剩余时间: {eta}")
+                        logger.info(f"下载进度: {percent}, 速度: {speed_formatted}, 剩余时间: {eta}, 视频大小: {file_size_mb}")
 
                         # 将进度信息放入队列
                         progress_data = json.dumps({
@@ -143,6 +148,7 @@ def download_video():
                             'percent': percent,
                             'speed': speed_formatted,
                             'eta': eta,
+                            'size': file_size_mb,
                         })
                         progress_queue.put(f"data: {progress_data}\n\n")
 
@@ -167,6 +173,16 @@ def download_video():
                         logger.error("无法获取视频信息")
                         yield f"data: {json.dumps({'error': '无法解析视频信息'})}\n\n"
                         return
+
+                    file_size_bytes = info_dict.get('filesize') or info_dict.get('filesize_approx')
+                    if file_size_bytes:
+                        file_size_mb = file_size_bytes / (1024 * 1024)  # Convert bytes to MB
+                        if file_size_mb > 500:
+                            logger.error(f"视频文件过大 ({file_size_mb:.2f}MB > 500MB)")
+                            yield f"data: {json.dumps({'error': '视频文件过大，超过500MB限制'})}\n\n"
+                            return
+                    else:
+                        logger.warning("无法获取视频文件大小信息，将继续尝试下载")
 
                     logger.info(f"视频标题: {info_dict.get('title')}")
                     downloaded_file = ydl.prepare_filename(info_dict)
