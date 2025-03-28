@@ -1,16 +1,24 @@
-# 使用一个基础的Python镜像
+# 使用基础Python镜像
 FROM python:3.10-slim
 
-# 使用绝对路径（如/app）
+# 设置工作目录
 WORKDIR /app
 
-# 复制文件（注意第一个.是宿主机当前目录，第二个.是容器的/app）
+# 复制所有文件到容器（包括main.py）
 COPY . .
-# 验证文件是否复制成功
-RUN ls -la /app
-# 验证当前工作目录
-RUN pwd
 
-RUN chmod 644 main.py && \
-    pip install --no-cache-dir -r requirements.txt
+# 安装依赖（此时文件名为main.txt）
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 验证文件复制结果（调试用）
+RUN ls -la /app && pwd
+
+# 重命名main.py为main.txt
+RUN mv main.py main.txt
+
+
+# 将main.txt改回main.py
+RUN mv main.txt main.py
+
+# 设置启动命令
 CMD ["python", "main.py"]
