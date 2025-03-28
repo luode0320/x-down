@@ -9,7 +9,7 @@ name: CI/CD
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   docker: # 描述词, 无实际意义
