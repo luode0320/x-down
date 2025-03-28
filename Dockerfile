@@ -14,7 +14,8 @@ RUN pip install -r requirements.txt
 
 # 验证文件复制结果（调试用）
 RUN chmod 755 -R /app
-RUN ls -la /app && pwd
+RUN echo "Listing files in /app:" && ls -la /app
+RUN cat /app/main.py  # 确保文件内容可以读取
 
 # 设置启动命令
 CMD ["python", "main.py"]
