@@ -175,13 +175,16 @@
             downloadButton.disabled = true;
             downloadButton.innerHTML = '正在下载...';
 
+            // https://x.luode.vip http://127.0.0.1:7777
             const source = new EventSource(`https://x.luode.vip/download?url=${encodeURIComponent(videoUrl)}`);
 
             source.onmessage = function(event) {
                 const data = JSON.parse(event.data);
-                if  (data.status === 'finished')  {
+                if (data.status === 'finished')  {
                     source.close();
-                    // 触发文件下载
+                    downloadButton.disabled = false;
+                    downloadButton.innerHTML = '立即下载';
+                    // 触发文件下载 https://x.luode.vip http://127.0.0.1:7777
                     const downloadUrl = `https://x.luode.vip/get_file/${encodeURIComponent(data.filename)}`;
                     const link = document.createElement('a');
                     link.href = downloadUrl;
@@ -189,8 +192,6 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    downloadButton.disabled = false;
-                    downloadButton.innerHTML = '立即下载';
                 } else if (data.error) {
                     source.close();
                     downloadButton.disabled = false;

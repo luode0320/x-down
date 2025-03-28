@@ -235,6 +235,66 @@ def get_file(filename):
         logger.error(f"文件下载错误: {str(e)}")
         return jsonify({'error': '文件下载失败'}), 500
 
+@app.route('/stream_download', methods=['GET'])
+def stream_download():
+    try:
+        url = request.args.get('url')
+        logger.info(f"流式下载请求 - URL: {url}")
+
+        if not url:
+            logger.error("缺少 URL 参数")
+            return jsonify({'error': '缺少必要的下载参数'}), 400
+
+        twitter_url = url.replace('x.com', 'twitter.com')
+
+        def generate():
+            try:
+                # 定义一个回调函数，用于捕获下载的每个片段
+                def download_hook(chunk):
+                    if chunk:
+                        yield chunk  # 实时推送数据块
+
+                ydl_opts = {
+                    'format': 'best[ext=mp4]',
+                    'outtmpl': '-',  # 输出到标准输出（stdout）
+                    'progress_hooks': [lambda d: logger.info(f"下载进度: {d.get('_percent_str', 'N/A')}")],
+                    'quiet': False,
+                    'socket_timeout': 10,
+                    'retries': 3,
+                    'concurrent_fragments': 16,
+                    'ignoreerrors': False,
+                }
+
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    logger.info(f"开始流式下载: {twitter_url}")
+                    info_dict = ydl.extract_info(twitter_url, download=False)
+
+                    if not info_dict:
+                        logger.error("无法获取视频信息")
+                        yield f"data: {json.dumps({'error': '无法解析视频信息'})}\n\n"
+                        return
+
+                    logger.info(f"视频标题: {info_dict.get('title')}")
+                    filename = os.path.basename(ydl.prepare_filename(info_dict))
+
+                    # 开始流式下载
+                    with ydl.open_in_stdout() as stdout:
+                        for chunk in iter(lambda: stdout.read(8192), b''):  # 每次读取 8KB 数据
+                            yield chunk  # 实时推送数据块
+
+            except Exception as e:
+                logger.error(f"处理错误: {traceback.format_exc()}")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+        headers = {
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Type": "application/octet-stream",
+        }
+        return Response(generate(), headers=headers)
+
+    except Exception as e:
+        logger.error(f"全局错误: {traceback.format_exc()}")
+        return jsonify({'error': '服务器处理错误'}), 500
 
 if __name__ == '__main__':
     print("启动 Flask 应用...")
