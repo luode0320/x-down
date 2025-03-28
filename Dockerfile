@@ -7,6 +7,7 @@ WORKDIR /app
 # 复制所有文件到容器（包括main.py）
 COPY requirements.txt /app/requirements.txt
 # 安装依赖（此时文件名为main.txt）
+RUN pip install --upgrade setuptools
 RUN pip install -r requirements.txt
 
 COPY ./ /app
