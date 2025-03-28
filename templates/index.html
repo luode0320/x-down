@@ -179,32 +179,30 @@
 
             source.onmessage = function(event) {
                 const data = JSON.parse(event.data);
-                if (data.percent) {
-                    requestAnimationFrame(() => {
-                        downloadButton.innerHTML = `下载中 ${data.percent}%`;
-                    });
+                if  (data.status === 'finished')  {
+                    source.close();
+                    // 触发文件下载
+                    const downloadUrl = `https://x.luode.vip/get_file/${encodeURIComponent(data.filename)}`;
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
 
-                    if (data.percent === 100 && data.filename) {
-                        source.close();
-                        // 触发文件下载
-                        const downloadUrl = `https://x.luode.vip/get_file/${encodeURIComponent(data.filename)}`;
-                        const link = document.createElement('a');
-                        link.href = downloadUrl;
-                        link.download = data.filename;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-
-                        setTimeout(() => {
-                            downloadButton.disabled = false;
-                            downloadButton.innerHTML = '立即下载';
-                        }, 500);
-                    }
+                    setTimeout(() => {
+                        downloadButton.disabled = false;
+                        downloadButton.innerHTML = '立即下载';
+                    }, 500);
                 } else if (data.error) {
                     source.close();
                     downloadButton.disabled = false;
                     downloadButton.innerHTML = '立即下载';
                     alert(data.error);
+                } else {
+                    requestAnimationFrame(() => {
+                        downloadButton.innerHTML = `下载中 ${data.percent}, 速度: ${data.speed}, 剩余时间: ${data.eta}`;
+                    });
                 }
             };
 

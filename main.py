@@ -7,6 +7,7 @@ import schedule
 import yt_dlp
 import time
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, request, jsonify, render_template
 from flask import Response, send_file
 
@@ -34,6 +35,10 @@ os.makedirs(data_dir, exist_ok=True)
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 if CORS:
     CORS(app, resources={r"/*": {"origins": "*"}})  # 允许所有域
+
+
+# 线程池（最多允许 2 条线程）
+thread_pool = ThreadPoolExecutor(max_workers=2)
 
 # 计算文件夹总大小的函数
 def get_folder_size(folder_path):
@@ -101,7 +106,6 @@ def download_video():
             try:
                 # 获取脚本所在目录的绝对路径
                 script_dir = os.path.dirname(os.path.abspath(__file__))
-                # 动态拼接目标文件路径
                 cookies_file = os.path.join(script_dir, 'config', 'cookies.txt')
 
                 if not os.path.exists(cookies_file):
@@ -110,6 +114,29 @@ def download_video():
                     return
                 else:
                     logger.info(f"使用 Cookies 文件: {cookies_file}")
+
+                # 创建一个队列用于传递进度信息
+                from queue import Queue
+                progress_queue = Queue()
+
+                # 定义进度钩子函数
+                def progress_hook(d):
+                    if d['status'] == 'downloading':
+                        percent = d.get('_percent_str', 'N/A').strip()
+                        speed = d.get('_speed_str', 'N/A').strip()
+                        eta = d.get('_eta_str', 'N/A').strip()
+
+                        # 打印进度到后台日志
+                        logger.info(f"下载进度: {percent}, 速度: {speed}, 剩余时间: {eta}")
+
+                        # 将进度信息放入队列
+                        progress_data = json.dumps({
+                            'status': 'downloading',
+                            'percent': percent,
+                            'speed': speed,
+                            'eta': eta,
+                        })
+                        progress_queue.put(f"data: {progress_data}\n\n")
 
                 ydl_opts = {
                     'cookiefile': cookies_file,
@@ -121,9 +148,7 @@ def download_video():
                     'socket_timeout': 10,
                     'retries': 3,
                     'concurrent_fragments': 16,
-                    'progress_hooks': [lambda d: logger.info(
-                        f"进度: {d.get('_percent_str', 'N/A')} | 速度: {d.get('_speed_str', 'N/A')}"
-                    )],
+                    'progress_hooks': [progress_hook],  # 使用普通函数作为钩子
                     'ignoreerrors': False,
                 }
 
@@ -136,13 +161,40 @@ def download_video():
                         return
 
                     logger.info(f"视频标题: {info_dict.get('title')}")
-                    ydl.download([twitter_url])
                     downloaded_file = ydl.prepare_filename(info_dict)
 
+                    # 启动下载任务
+                    def download_task():
+                        try:
+                            ydl.download([twitter_url])
+                        except Exception as e:
+                            logger.error(f"下载错误: {traceback.format_exc()}")
+                            progress_queue.put(f"data: {json.dumps({'error': str(e)})}\n\n")
+
+                    # 使用线程运行下载任务，避免阻塞主生成器
+
+                    # 提交下载任务到线程池
+                    future = thread_pool.submit(download_task)
+
+                    # 持续从队列中读取进度信息并推送到前端
+                    while not future.done() or not progress_queue.empty():
+                        while not progress_queue.empty():
+                            yield progress_queue.get()
+                        time.sleep(0.1)
+
+                    # 等待下载任务完成
+                    future.result()
+
+                    # 校验文件是否存在且完整
                     if os.path.exists(downloaded_file):
-                        # 返回文件名而不是完整路径
-                        filename = os.path.basename(downloaded_file)
-                        yield f"data: {json.dumps({'percent': 100, 'filename': filename})}\n\n"
+                        file_size = os.path.getsize(downloaded_file)
+                        expected_size = info_dict.get('filesize', None)
+                        if expected_size and file_size != expected_size:
+                            logger.error(f"文件大小不匹配: 实际大小={file_size}, 预期大小={expected_size}")
+                            yield f"data: {json.dumps({'error': '文件下载不完整'})}\n\n"
+                        else:
+                            filename = os.path.basename(downloaded_file)
+                            yield f"data: {json.dumps({'status': 'finished', 'percent': '100%', 'filename': filename})}\n\n"
                     else:
                         logger.error("文件未生成，可能下载中断")
                         yield f"data: {json.dumps({'error': '文件生成失败'})}\n\n"
