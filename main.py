@@ -158,7 +158,7 @@ if __name__ == '__main__':
         logger.addHandler(file_handler)
 
         print("开始运行应用...")
-        app.run(host='0.0.0.0', port=7777, debug=True, use_reloader=False)
+        app.run(host='0.0.0.0', port=7777, use_reloader=False)
     except Exception as e:
         print(f"启动失败，错误信息: {e}")
         print(f"详细错误追踪: {traceback.format_exc()}")
