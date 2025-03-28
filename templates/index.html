@@ -148,11 +148,6 @@
         <div class="input-container">
             <input type="text" id="videoUrl" placeholder="输入 X/Twitter 视频链接" required>
             <button class="paste-btn" onclick="pasteFromClipboard()">粘贴</button>
-            <div id="progress">
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-            </div>
         </div>
         <button class="down-btn" onclick="downloadVideo()">立即下载</button>
     </div>
@@ -184,7 +179,7 @@
             }
 
             downloadButton.disabled = true;
-            downloadButton.innerHTML = '正在准备下载...';
+            downloadButton.innerHTML = '正在下载...';
             progressContainer.style.display = 'block';
             progressBar.style.width = '0%';
 
