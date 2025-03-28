@@ -6,6 +6,7 @@ WORKDIR /app
 
 # 复制所有文件到容器（包括main.py）
 COPY requirements.txt /app/requirements.txt
+COPY main.py /app/main.py
 
 # 安装依赖（此时文件名为main.txt）
 RUN pip install --no-cache-dir -r requirements.txt
@@ -15,4 +16,4 @@ COPY . /app
 RUN ls -la /app && pwd
 
 # 设置启动命令
-CMD ["python", "/app/main.py"]
+CMD python /app/main.py
