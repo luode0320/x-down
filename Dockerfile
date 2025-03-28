@@ -13,12 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 验证文件复制结果（调试用）
 RUN ls -la /app && pwd
 
-# 重命名main.py为main.txt
-RUN mv main.py main.txt
-
-
-# 将main.txt改回main.py
-RUN mv main.txt main.py
-
 # 设置启动命令
 CMD ["python", "main.py"]

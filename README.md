@@ -1,23 +1,8 @@
-# X/Twitter Video Downloader
-
 ## 项目描述
 一个简单、高效的 X/Twitter 视频下载工具，支持快速从 Twitter 和 X.com 下载视频。
-
-## 特性
-- 支持 X/Twitter 视频下载
-- 桌面直接保存
-- 高性能下载
-- 实时下载进度
-- 简洁的 Web 界面
+![home.png](static%2Fhome.png)
 
 ## 安装步骤
-
-### 创建虚拟环境
-```bash
-python3 -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate  # macOS/Linux
-```
 
 ### 安装依赖
 ```bash
