@@ -203,7 +203,7 @@
                 }
 
                 // 显示视频信息确认对话框
-                const confirmMessage = `视频信息:\n\n标题: ${data.title}\n\n大小: ${data.size_mb ? data.size_mb + 'MB' : '未知'}\n时长: ${data.duration || '未知'}\n\n确定要下载吗？`;
+                const confirmMessage = `视频信息:\n\n标题: ${data.title}\n\n预估大小: ${data.size_mb ? data.size_mb + 'MB' : '未知'}\n时长: ${data.duration || '未知'}\n\n确定要下载吗？`;
 
                 if (confirm(confirmMessage)) {
                     // 用户确认后开始下载
