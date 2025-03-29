@@ -90,6 +90,77 @@ def index():
         return f"Error: {str(e)}", 500
 
 
+@app.route('/check_video', methods=['GET'])
+def check_video():
+    try:
+        url = request.args.get('url')
+        logger.info(f"检查视频请求 - URL: {url}")
+
+        if not url:
+            logger.error("缺少 URL 参数")
+            return jsonify({'error': '缺少URL参数'}), 400
+
+        twitter_url = url.replace('x.com', 'twitter.com')
+
+        # 获取脚本所在目录的绝对路径
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        cookies_file = os.path.join(script_dir, 'config', 'cookies.txt')
+
+        if not os.path.exists(cookies_file):
+            logger.error(f"Cookies 文件未找到: {cookies_file}")
+            return jsonify({'error': 'Cookies 文件未找到'}), 400
+
+        ydl_opts = {
+            'cookiefile': cookies_file,
+            'cookiestyle': 'netscape',
+            'format': 'best[ext=mp4]',
+            'extract_flat': False,
+            'quiet': True,
+            'socket_timeout': 10,
+            'retries': 3,
+            'ignoreerrors': False,
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            logger.info(f"开始获取视频信息: {twitter_url}")
+            info_dict = ydl.extract_info(twitter_url, download=False)
+
+            if not info_dict:
+                logger.error("无法获取视频信息")
+                return jsonify({'error': '无法解析视频信息'}), 400
+
+            # 获取视频大小（MB）
+            file_size_bytes = info_dict.get('filesize') or info_dict.get('filesize_approx')
+            file_size_mb = None
+            if file_size_bytes:
+                file_size_mb = round(file_size_bytes / (1024 * 1024), 2)  # 转换为MB并保留2位小数
+
+            # 获取视频标题
+            video_title = info_dict.get('title', '未知标题')
+
+            # 获取视频时长（秒）
+            duration = info_dict.get('duration')
+            duration_str = None
+            if duration:
+                minutes, seconds = divmod(duration, 60)
+                duration_str = f"{int(minutes)}分{int(seconds)}秒"
+
+            # 构建返回数据
+            video_info = {
+                'title': video_title,
+                'size_mb': file_size_mb,
+                'duration': duration_str,
+                'url': twitter_url,
+                'can_download': file_size_mb <= 500 if file_size_mb else True  # 是否允许下载（小于500MB）
+            }
+
+            logger.info(f"视频信息获取成功: {video_info}")
+            return jsonify(video_info)
+
+    except Exception as e:
+        logger.error(f"检查视频时出错: {traceback.format_exc()}")
+        return jsonify({'error': f'获取视频信息失败: {str(e)}'}), 500
+
 @app.route('/download', methods=['GET'])
 def download_video():
     try:

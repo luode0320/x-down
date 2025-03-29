@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>X视频下载</title>
+    <title>视频下载</title>
     <link rel="icon" type="image/x-icon" href="../static/favicon.svg">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -143,22 +143,72 @@
 <body>
     <div class="container">
         <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231d9bf0' d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'/%3E%3C/svg%3E" class="logo" alt="X Logo">
-        <h1>X/Twitter 视频下载器</h1>
+        <h1>X/Twitter视频下载</h1>
 
         <div class="input-container">
             <input type="text" id="videoUrl" placeholder="输入 X/Twitter 视频链接" required>
             <button class="paste-btn" onclick="pasteFromClipboard()">粘贴</button>
         </div>
-        <button class="down-btn" onclick="downloadVideo()">立即下载</button>
+        <button class="down-btn" onclick="check()">立即下载</button>
     </div>
 
     <script>
+        pasteFromClipboard()
+
         // 粘贴功能
         async function pasteFromClipboard() {
             const clipboardText = await navigator.clipboard.readText();
             if (clipboardText.trim() !== "") { // 检查剪贴板内容是否为空
-                document.getElementById('videoUrl').value = clipboardText; // 将内容填充到输入框
-                downloadVideo(); // 调用下载函数
+                // 正则表达式检测 HTTPS 链接
+                const httpsRegex = /^https:\/\/[^\s/$.?#].[^\s]*$/i;
+                if (httpsRegex.test(clipboardText.trim())) {
+                    document.getElementById('videoUrl').value = clipboardText; // 将内容填充到输入框
+                    const downloadButton = document.querySelector('.down-btn');
+                    downloadButton.innerHTML = '读取粘贴板完成, 立即下载';
+                }
+            }
+        }
+
+        function check() {
+            const videoUrl = document.getElementById('videoUrl').value.trim();
+            if (!videoUrl) {
+                alert('请输入视频URL');
+                return;
+            }
+
+            // 先检查视频信息
+            checkVideoSize(videoUrl);
+        }
+
+        // 先调用检查接口
+        async function checkVideoSize(url) {
+            try {
+                const response = await fetch(`/check_video?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // 显示视频信息确认对话框
+                if (data.size_mb && data.size_mb > 500) {
+                    alert(`视频大小 ${data.size_mb}MB 超过500MB限制\n暂时不提供该大小的视频下载`);
+                    document.getElementById('videoUrl').value = "";
+                    document.querySelector('.down-btn').innerHTML = '立即下载';
+                    return;
+                }
+
+                // 显示视频信息确认对话框
+                const confirmMessage = `视频信息:\n\n标题: ${data.title}\n\n大小: ${data.size_mb ? data.size_mb + 'MB' : '未知'}\n时长: ${data.duration || '未知'}\n\n确定要下载吗？`;
+
+                if (confirm(confirmMessage)) {
+                    // 用户确认后开始下载
+                    downloadVideo(url);
+                }
+            } catch (error) {
+                console.error('检查视频大小出错:', error);
+                alert('获取视频信息失败');
             }
         }
 
@@ -183,7 +233,8 @@
                 if (data.status === 'finished')  {
                     source.close();
                     downloadButton.disabled = false;
-                    downloadButton.innerHTML = '立即下载';
+                    document.getElementById('videoUrl').value = "";
+                    document.querySelector('.down-btn').innerHTML = '立即下载';
                     // 触发文件下载 https://x.luode.vip http://127.0.0.1:7777
                     const downloadUrl = `https://x.luode.vip/get_file/${encodeURIComponent(data.filename)}`;
                     const link = document.createElement('a');
@@ -195,7 +246,8 @@
                 } else if (data.error) {
                     source.close();
                     downloadButton.disabled = false;
-                    downloadButton.innerHTML = '立即下载';
+                    document.getElementById('videoUrl').value = "";
+                    document.querySelector('.down-btn').innerHTML = '立即下载';
                     alert(data.error);
                 } else {
                     requestAnimationFrame(() => {
@@ -207,8 +259,9 @@
             source.onerror = function() {
                 source.close();
                 downloadButton.disabled = false;
-                downloadButton.innerHTML = '立即下载';
-                alert('下载出错，请检查网络或重试');
+                document.getElementById('videoUrl').value = "";
+                document.querySelector('.down-btn').innerHTML = '立即下载';
+                alert('下载出错, 请检查网络或重试\n联系开发tg: https://t.me/luode0320');
             };
         }
     </script>
