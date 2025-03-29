@@ -3,6 +3,8 @@ import os
 import sys
 import json
 import traceback
+from threading import Event, Lock
+from collections import defaultdict
 import schedule
 import yt_dlp
 import time
@@ -39,6 +41,9 @@ if CORS:
 
 # 线程池（最多允许 2 条线程）
 thread_pool = ThreadPoolExecutor(max_workers=2)
+# 全局变量管理下载任务
+download_tasks = defaultdict(dict)
+download_lock = Lock()
 
 # 计算文件夹总大小的函数
 def get_folder_size(folder_path):
@@ -165,13 +170,20 @@ def check_video():
 def download_video():
     try:
         url = request.args.get('url')
+        session_id = request.args.get('session_id')  # 前端生成的会话ID
         logger.info(f"下载请求 - URL: {url}")
+        logger.error(f"下载请求 - Id: {session_id}")
 
         if not url:
             logger.error("缺少 URL 参数")
             return jsonify({'error': '缺少必要的下载参数'}), 400
 
         twitter_url = url.replace('x.com', 'twitter.com')
+
+        # 创建停止事件
+        stop_event = Event()
+        with download_lock:
+            download_tasks[session_id] = {'stop_event': stop_event}
 
         def generate():
             try:
@@ -192,6 +204,10 @@ def download_video():
 
                 # 定义进度钩子函数
                 def progress_hook(d):
+                    if stop_event.is_set():
+                        logger.error(f"中断下载: {session_id}")
+                        d['fd'].close()  # 关闭文件下载句柄
+
                     if d['status'] == 'downloading':
                         percent = d.get('_percent_str', 'N/A').strip()
                         speed = d.get('_speed_str', 'N/A').strip()
@@ -245,16 +261,6 @@ def download_video():
                         yield f"data: {json.dumps({'error': '无法解析视频信息'})}\n\n"
                         return
 
-                    file_size_bytes = info_dict.get('filesize') or info_dict.get('filesize_approx')
-                    if file_size_bytes:
-                        file_size_mb = file_size_bytes / (1024 * 1024)  # Convert bytes to MB
-                        if file_size_mb > 500:
-                            logger.error(f"视频文件过大 ({file_size_mb:.2f}MB > 500MB)")
-                            yield f"data: {json.dumps({'error': '视频文件过大，超过500MB限制'})}\n\n"
-                            return
-                    else:
-                        logger.warning("无法获取视频文件大小信息，将继续尝试下载")
-
                     logger.info(f"视频标题: {info_dict.get('title')}")
                     downloaded_file = ydl.prepare_filename(info_dict)
 
@@ -263,7 +269,7 @@ def download_video():
                         try:
                             ydl.download([twitter_url])
                         except Exception as e:
-                            logger.error(f"下载错误: {traceback.format_exc()}")
+                            logger.error(f"下载错误: {session_id}")
                             progress_queue.put(f"data: {json.dumps({'error': str(e)})}\n\n")
 
                     # 使用线程运行下载任务，避免阻塞主生成器
@@ -295,8 +301,12 @@ def download_video():
                         yield f"data: {json.dumps({'error': '文件生成失败'})}\n\n"
 
             except Exception as e:
-                logger.error(f"处理错误: {traceback.format_exc()}")
+                logger.error(f"处理错误: {str(e)}")
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            finally:
+                with download_lock:
+                    if session_id in download_tasks:
+                        del download_tasks[session_id]
 
         return Response(generate(), mimetype='text/event-stream')
 
@@ -321,6 +331,22 @@ def get_file(filename):
     except Exception as e:
         logger.error(f"文件下载错误: {str(e)}")
         return jsonify({'error': '文件下载失败'}), 500
+
+
+@app.route('/cancel_download', methods=['GET'])
+def cancel_download():
+    session_id = request.args.get('session_id')
+    if not session_id:
+        return jsonify({'error': '缺少session_id'}), 400
+
+    logger.error(f"请求中断下载 - Id: {session_id}")
+    with download_lock:
+        if session_id in download_tasks:
+            download_tasks[session_id]['stop_event'].set()
+            del download_tasks[session_id]
+            return jsonify({'status': 'cancelled'})
+
+    return jsonify({'error': 'session not found'}), 404
 
 
 if __name__ == '__main__':

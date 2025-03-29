@@ -153,6 +153,8 @@
     </div>
 
     <script>
+        let downloadSessionId = null;
+        let eventSource = null;
         pasteFromClipboard()
 
         // 粘贴功能
@@ -164,7 +166,8 @@
                 if (httpsRegex.test(clipboardText.trim())) {
                     document.getElementById('videoUrl').value = clipboardText; // 将内容填充到输入框
                     const downloadButton = document.querySelector('.down-btn');
-                    downloadButton.innerHTML = '读取粘贴板完成, 立即下载';
+                    downloadButton.innerHTML = '立即下载';
+                    check();
                 }
             }
         }
@@ -172,7 +175,9 @@
         function check() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             if (!videoUrl) {
-                alert('请输入视频URL');
+                document.getElementById('videoUrl').value = "";
+                document.querySelector('.down-btn').innerHTML = '立即下载';
+                alert('请输入正确的视频URL');
                 return;
             }
 
@@ -183,19 +188,17 @@
         // 先调用检查接口
         async function checkVideoSize(url) {
             try {
-                const response = await fetch(`/check_video?url=${encodeURIComponent(url)}`);
+                document.querySelector('.down-btn').disabled = true;
+                document.querySelector('.down-btn').innerHTML = '正在解析视频...';
+                // https://x.luode.vip http://127.0.0.1:7777
+                const response = await fetch(`https://x.luode.vip/check_video?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
 
                 if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                // 显示视频信息确认对话框
-                if (data.size_mb && data.size_mb > 500) {
-                    alert(`视频大小 ${data.size_mb}MB 超过500MB限制\n暂时不提供该大小的视频下载`);
+                    document.querySelector('.down-btn').disabled = false;
                     document.getElementById('videoUrl').value = "";
                     document.querySelector('.down-btn').innerHTML = '立即下载';
+                    alert(data.error);
                     return;
                 }
 
@@ -205,9 +208,14 @@
                 if (confirm(confirmMessage)) {
                     // 用户确认后开始下载
                     downloadVideo(url);
+                } else {
+                    document.querySelector('.down-btn').disabled = false;
+                    document.querySelector('.down-btn').innerHTML = '立即下载';
                 }
             } catch (error) {
-                console.error('检查视频大小出错:', error);
+                document.querySelector('.down-btn').disabled = false;
+                document.getElementById('videoUrl').value = "";
+                document.querySelector('.down-btn').innerHTML = '立即下载';
                 alert('获取视频信息失败');
             }
         }
@@ -218,20 +226,28 @@
             const downloadButton = document.querySelector('.down-btn');
 
             if (!videoUrl) {
-                alert('请输入视频链接');
+                document.getElementById('videoUrl').value = "";
+                document.querySelector('.down-btn').innerHTML = '立即下载';
+                alert('请输入正确的视频URL');
                 return;
             }
+
+            // 生成唯一会话ID
+            downloadSessionId = 'dl-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
             downloadButton.disabled = true;
             downloadButton.innerHTML = '正在下载...';
 
-            // https://x.luode.vip http://127.0.0.1:7777
-            const source = new EventSource(`https://x.luode.vip/download?url=${encodeURIComponent(videoUrl)}`);
+            // 设置页面关闭事件监听
+            window.addEventListener('beforeunload', handlePageClose);
 
-            source.onmessage = function(event) {
+            // https://x.luode.vip http://127.0.0.1:7777
+            eventSource = new EventSource(`https://x.luode.vip/download?url=${encodeURIComponent(videoUrl)}&session_id=${downloadSessionId}`);
+
+            eventSource.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.status === 'finished')  {
-                    source.close();
+                    eventSource.close();
                     downloadButton.disabled = false;
                     document.getElementById('videoUrl').value = "";
                     document.querySelector('.down-btn').innerHTML = '立即下载';
@@ -243,11 +259,13 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                    cleanupDownload();
                 } else if (data.error) {
-                    source.close();
+                    eventSource.close();
                     downloadButton.disabled = false;
                     document.getElementById('videoUrl').value = "";
                     document.querySelector('.down-btn').innerHTML = '立即下载';
+                    cleanupDownload();
                     alert(data.error);
                 } else {
                     requestAnimationFrame(() => {
@@ -256,13 +274,40 @@
                 }
             };
 
-            source.onerror = function() {
-                source.close();
+            eventSource.onerror = function() {
+                eventSource.close();
+                cleanupDownload();
                 downloadButton.disabled = false;
                 document.getElementById('videoUrl').value = "";
                 document.querySelector('.down-btn').innerHTML = '立即下载';
                 alert('下载出错, 请检查网络或重试\n联系开发tg: https://t.me/luode0320');
             };
+        }
+
+        function handlePageClose() {
+            if (downloadSessionId) {
+                // https://x.luode.vip http://127.0.0.1:7777
+                fetch(`https://x.luode.vip/cancel_download?session_id=${downloadSessionId}`);
+                downloadSessionId = null;
+            }
+        }
+
+        function cleanupDownload() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            if (downloadSessionId) {
+                // https://x.luode.vip http://127.0.0.1:7777
+                fetch(`https://x.luode.vip/cancel_download?session_id=${downloadSessionId}`);
+                downloadSessionId = null;
+            }
+
+            document.querySelector('.down-btn').disabled = false;
+            document.getElementById('videoUrl').value = "";
+            document.querySelector('.down-btn').innerHTML = '立即下载';
+            window.removeEventListener('beforeunload', handlePageClose);
         }
     </script>
 </body>
