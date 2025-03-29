@@ -138,7 +138,7 @@ def check_video():
             file_size_bytes = info_dict.get('filesize') or info_dict.get('filesize_approx')
             file_size_mb = None
             if file_size_bytes:
-                file_size_mb = round(file_size_bytes / (1024 * 1024), 2)  # 转换为MB并保留2位小数
+                file_size_mb = round(file_size_bytes / (1024 * 1024) / 2, 2)  # 转换为MB并保留2位小数, 预估数据/2
 
             # 获取视频标题
             video_title = info_dict.get('title', '未知标题')
