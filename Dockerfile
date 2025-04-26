@@ -18,6 +18,7 @@ RUN xxd -p -l 3 /app/main.py
 RUN pip install --upgrade setuptools
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN pip install --upgrade yt-dlp
 
 # 设置启动命令
 CMD ["python", "main.py"]

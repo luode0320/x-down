@@ -10,6 +10,7 @@
 ### 安装依赖
 ```bash
 pip install -r requirements.txt
+pip install --upgrade yt-dlp
 ```
 
 ## 提取cookies
