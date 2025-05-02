@@ -34,7 +34,6 @@ jobs:
             docker rm -fv x-down
             docker rmi luode0320/x-down:latest
             docker run -d \
-            --network host \
             --restart=always \
             -p 7777:7777 \
             -v /usr/local/src/x-down:/app/config \
