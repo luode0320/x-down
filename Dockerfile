@@ -1,24 +1,9 @@
-# 使用基础Python镜像
-FROM python:3.9-slim-buster
+FROM python:3.12-slim
 
-# 安装 file 和 xxd 工具
-RUN apt-get update && apt-get install -y file vim-common
-
-# 代码添加到文件夹
-ADD . /app
-
-# 设置工作目录
 WORKDIR /app
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r /app/requirements.txt
 
-# 检查文件编码和 BOM
-RUN file -bi /app/main.py
-RUN xxd -p -l 3 /app/main.py
-
-# 安装依赖
-RUN pip install --upgrade setuptools
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-RUN pip install --upgrade yt-dlp
-
-# 设置启动命令
+COPY . /app
+EXPOSE 7777
 CMD ["python", "main.py"]

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>X 视频直连解析</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --line: #30363d;
+      --accent: #2f81f7;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: radial-gradient(circle at 20% 20%, #1f2a3a 0%, var(--bg) 45%);
+      color: var(--text);
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 860px;
+      background: linear-gradient(180deg, #161b22 0%, #11161d 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 18px; color: var(--muted); }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    input {
+      flex: 1;
+      min-width: 260px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+    }
+
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #error { margin-top: 12px; color: #ff7b72; white-space: pre-wrap; }
+
+    .result {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      display: none;
+    }
+
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+
+    .variant {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: #0d1117;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .variant small { color: var(--muted); }
+
+    .link-btn {
+      text-decoration: none;
+      color: #fff;
+      background: #238636;
+      padding: 8px 12px;
+      border-radius: 9px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>X/Twitter 视频直连解析</h1>
+    <p>使用服务端登录态 cookies 解析视频直链，不经过本服务中转下载。</p>
+
+    <div class="row">
+      <input id="url" type="text" placeholder="https://x.com/.../status/...">
+      <button id="resolveBtn">解析直链</button>
+    </div>
+
+    <div id="error"></div>
+
+    <div id="result" class="result">
+      <h2 id="title"></h2>
+      <div id="meta" class="meta"></div>
+      <div id="variants"></div>
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('resolveBtn');
+    const urlInput = document.getElementById('url');
+    const errorEl = document.getElementById('error');
+    const resultEl = document.getElementById('result');
+    const titleEl = document.getElementById('title');
+    const metaEl = document.getElementById('meta');
+    const variantsEl = document.getElementById('variants');
+
+    function formatBytes(bytes) {
+      if (!bytes) return '未知大小';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      let size = bytes;
+      let idx = 0;
+      while (size >= 1024 && idx < units.length - 1) {
+        size /= 1024;
+        idx += 1;
+      }
+      return `${size.toFixed(2)} ${units[idx]}`;
+    }
+
+    async function resolve() {
+      const url = urlInput.value.trim();
+      errorEl.textContent = '';
+      resultEl.style.display = 'none';
+      variantsEl.innerHTML = '';
+
+      if (!url) {
+        errorEl.textContent = '请输入推文链接';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '解析中...';
+
+      try {
+        const response = await fetch('/api/v1/resolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, prefer: 'mp4' })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          errorEl.textContent = data.detail || '解析失败';
+          return;
+        }
+
+        titleEl.textContent = data.title;
+        metaEl.textContent = `时长: ${data.duration ?? '未知'} 秒 | 链接有效期: ${data.expires_at}`;
+
+        for (const v of data.variants) {
+          const row = document.createElement('div');
+          row.className = 'variant';
+          row.innerHTML = `
+            <div>
+              <div>${v.quality}</div>
+              <small>${v.mime} · ${formatBytes(v.size_bytes)}</small>
+            </div>
+            <a class="link-btn" href="${v.url}" target="_blank" rel="noopener noreferrer">直连下载</a>
+          `;
+          variantsEl.appendChild(row);
+        }
+
+        resultEl.style.display = 'block';
+      } catch (err) {
+        errorEl.textContent = `请求失败: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '解析直链';
+      }
+    }
+
+    btn.addEventListener('click', resolve);
+    urlInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') resolve();
+    });
+  </script>
+</body>
+</html>

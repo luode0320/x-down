@@ -1,0 +1,116 @@
+html {
+  width: 500px;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+  background-color: #fdfbff;
+}
+
+body {
+  margin: 8px;
+  width: 484px;
+  font-size: 75%;
+}
+
+h1 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+}
+
+h1 > a#location {
+  color: #3153ee;
+}
+
+main {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.export-btn-container {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.export-btn {
+  border: none;
+  border-radius: 5px;
+  height: 2.5rem;
+  font-size: 0.9rem;
+}
+.export-btn > .button-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+}
+
+.export-btn:hover {
+  filter: brightness(0.85);
+}
+.export-btn:active {
+  filter: brightness(1.15);
+}
+
+.export-btn.large {
+  grid-column: 1 / 4;
+}
+
+.export-btn.export {
+  background-color: #485fc7;
+  color: white;
+}
+
+.export-btn.export-as {
+  background-color: #fee08a;
+  color: black;
+}
+
+.export-btn.copy,
+.export-btn.export-all {
+  background-color: #3f8ecf;
+  color: white;
+}
+
+/* default text */
+.export-btn.copy {
+  .default-copy-text {
+    display: flex;
+  }
+  .copied-text {
+    display: none;
+  }
+}
+
+/* when copied */
+.export-btn.copy.copied {
+  .default-copy-text {
+    display: none;
+  }
+  .copied-text {
+    display: flex;
+  }
+}
+
+.table-container {
+  width: 100%;
+  max-height: 380px;
+  overflow: scroll;
+}
+
+.netscape-table {
+  border-collapse: collapse;
+}
+
+.netscape-table th,
+td {
+  border: solid 1px black;
+}
+
+.netscape-table tbody tr:nth-of-type(2n + 1) {
+  background-color: aliceblue;
+}
