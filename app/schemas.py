@@ -12,6 +12,7 @@ class MediaVariant(BaseModel):
     quality: str
     mime: str
     url: str
+    download_url: str | None = None
     size_bytes: int | None = None
 
 

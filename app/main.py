@@ -45,6 +45,7 @@ def resolve_endpoint(payload: ResolveRequest) -> ResolveResponse:
                 quality=v.quality,
                 mime=v.mime,
                 url=v.url,
+                download_url=v.url,
                 size_bytes=v.size_bytes,
             )
             for v in resolved.variants

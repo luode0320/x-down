@@ -91,12 +91,14 @@
     .variant small { color: var(--muted); }
 
     .link-btn {
+      border: 0;
       text-decoration: none;
       color: #fff;
       background: #238636;
       padding: 8px 12px;
       border-radius: 9px;
       white-space: nowrap;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -127,6 +129,7 @@
     const titleEl = document.getElementById('title');
     const metaEl = document.getElementById('meta');
     const variantsEl = document.getElementById('variants');
+    const fileNameSafeRe = /[\\/:*?"<>|]+/g;
 
     function formatBytes(bytes) {
       if (!bytes) return '未知大小';
@@ -138,6 +141,27 @@
         idx += 1;
       }
       return `${size.toFixed(2)} ${units[idx]}`;
+    }
+
+    function makeFileName(title, quality, mime) {
+      const safeTitle = (title || 'x-video').replace(fileNameSafeRe, '_').trim() || 'x-video';
+      const ext = mime && mime.includes('mp4') ? 'mp4' : 'bin';
+      return `${safeTitle}_${quality}.${ext}`;
+    }
+
+    async function triggerDownload(downloadUrl, btnEl) {
+      const originalText = btnEl.textContent;
+      btnEl.disabled = true;
+      btnEl.textContent = '下载中...';
+
+      try {
+        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      } catch (err) {
+        alert(`打开失败：${err.message}\n请重新解析后重试。`);
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = originalText;
+      }
     }
 
     async function resolve() {
@@ -178,8 +202,12 @@
               <div>${v.quality}</div>
               <small>${v.mime} · ${formatBytes(v.size_bytes)}</small>
             </div>
-            <a class="link-btn" href="${v.url}" target="_blank" rel="noopener noreferrer">直连下载</a>
+            <button class="link-btn" type="button">直连下载</button>
           `;
+          row.querySelector('.link-btn').addEventListener('click', (event) => {
+            const downloadUrl = v.url;
+            triggerDownload(downloadUrl, event.currentTarget);
+          });
           variantsEl.appendChild(row);
         }
 

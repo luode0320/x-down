@@ -45,3 +45,4 @@ def test_resolve_success(client, monkeypatch) -> None:
     body = response.json()
     assert body["id"] == "res_demo123"
     assert body["variants"][0]["quality"] == "720p"
+    assert body["variants"][0]["download_url"] == "https://video.twimg.com/demo.mp4"
