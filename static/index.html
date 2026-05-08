@@ -1,229 +1,324 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>X 视频直连解析</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --line: #30363d;
-      --accent: #2f81f7;
-      --text: #c9d1d9;
-      --muted: #8b949e;
-    }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>X 视频直连解析</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --panel: #161b22;
+        --line: #30363d;
+        --accent: #2f81f7;
+        --text: #c9d1d9;
+        --muted: #8b949e;
+      }
 
-    * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      background: radial-gradient(circle at 20% 20%, #1f2a3a 0%, var(--bg) 45%);
-      color: var(--text);
-      font-family: "Segoe UI", "PingFang SC", sans-serif;
-    }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background: radial-gradient(
+          circle at 20% 20%,
+          #1f2a3a 0%,
+          var(--bg) 45%
+        );
+        color: var(--text);
+        font-family: "Segoe UI", "PingFang SC", sans-serif;
+      }
 
-    .card {
-      width: 100%;
-      max-width: 860px;
-      background: linear-gradient(180deg, #161b22 0%, #11161d 100%);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 22px;
-    }
+      .card {
+        width: 100%;
+        max-width: 860px;
+        background: linear-gradient(180deg, #161b22 0%, #11161d 100%);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px;
+      }
 
-    h1 { margin: 0 0 8px; font-size: 28px; }
-    p { margin: 0 0 18px; color: var(--muted); }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+      }
 
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .actions {
+        margin-top: 10px;
+      }
 
-    input {
-      flex: 1;
-      min-width: 260px;
-      background: #0d1117;
-      color: var(--text);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 14px;
-    }
+      input {
+        flex: 1;
+        min-width: 260px;
+        background: #0d1117;
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 14px;
+      }
 
-    button {
-      border: 0;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-weight: 600;
-      cursor: pointer;
-      color: #fff;
-      background: var(--accent);
-    }
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #fff;
+        background: var(--accent);
+      }
 
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .btn-muted {
+        background: #334155;
+      }
+      .btn-clear {
+        background: #4b5563;
+      }
 
-    #error { margin-top: 12px; color: #ff7b72; white-space: pre-wrap; }
+      #error {
+        margin-top: 12px;
+        color: #ff7b72;
+        white-space: pre-wrap;
+      }
 
-    .result {
-      margin-top: 18px;
-      border-top: 1px solid var(--line);
-      padding-top: 16px;
-      display: none;
-    }
+      .result {
+        margin-top: 18px;
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+        display: none;
+      }
 
-    .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 10px;
+      }
+      .tips {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #0b1220;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
 
-    .variant {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      background: #0d1117;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 8px;
-    }
+      .variant {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        background: #0d1117;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 8px;
+      }
 
-    .variant small { color: var(--muted); }
+      .variant small {
+        color: var(--muted);
+      }
 
-    .link-btn {
-      border: 0;
-      text-decoration: none;
-      color: #fff;
-      background: #238636;
-      padding: 8px 12px;
-      border-radius: 9px;
-      white-space: nowrap;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>X/Twitter 视频直连解析</h1>
-    <p>使用服务端登录态 cookies 解析视频直链，不经过本服务中转下载。</p>
+      .link-btn {
+        border: 0;
+        text-decoration: none;
+        color: #fff;
+        background: #238636;
+        padding: 8px 12px;
+        border-radius: 9px;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>视频直连解析</h1>
+      <p>解析视频直链，不经过本服务中转下载</p>
 
-    <div class="row">
-      <input id="url" type="text" placeholder="https://x.com/.../status/...">
-      <button id="resolveBtn">解析直链</button>
+      <div class="row">
+        <input
+          id="url"
+          type="text"
+          placeholder="https://x.com/.../status/..."
+        />
+      </div>
+      <div class="row actions">
+        <button id="pasteBtn" class="btn-muted" type="button">粘贴</button>
+        <button id="resolveBtn" type="button">解析</button>
+        <button id="clearBtn" class="btn-clear" type="button">清空</button>
+      </div>
+
+      <div id="error"></div>
+
+      <div id="result" class="result">
+        <h2 id="title"></h2>
+        <div id="meta" class="meta"></div>
+        <div class="tips" id="saveTips">
+          保存说明：<br />
+          电脑端：打开直链后，按 <b>Ctrl + S</b>（Mac 用 <b>Command + S</b>）保存视频。<br />
+          移动端：打开直链后，长按视频并选择“下载视频”或“保存到相册”。
+        </div>
+        <div id="variants"></div>
+      </div>
     </div>
 
-    <div id="error"></div>
+    <script>
+      const resolveBtn = document.getElementById("resolveBtn");
+      const pasteBtn = document.getElementById("pasteBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const urlInput = document.getElementById("url");
+      const errorEl = document.getElementById("error");
+      const resultEl = document.getElementById("result");
+      const titleEl = document.getElementById("title");
+      const metaEl = document.getElementById("meta");
+      const saveTipsEl = document.getElementById("saveTips");
+      const variantsEl = document.getElementById("variants");
 
-    <div id="result" class="result">
-      <h2 id="title"></h2>
-      <div id="meta" class="meta"></div>
-      <div id="variants"></div>
-    </div>
-  </div>
-
-  <script>
-    const btn = document.getElementById('resolveBtn');
-    const urlInput = document.getElementById('url');
-    const errorEl = document.getElementById('error');
-    const resultEl = document.getElementById('result');
-    const titleEl = document.getElementById('title');
-    const metaEl = document.getElementById('meta');
-    const variantsEl = document.getElementById('variants');
-    const fileNameSafeRe = /[\\/:*?"<>|]+/g;
-
-    function formatBytes(bytes) {
-      if (!bytes) return '未知大小';
-      const units = ['B', 'KB', 'MB', 'GB'];
-      let size = bytes;
-      let idx = 0;
-      while (size >= 1024 && idx < units.length - 1) {
-        size /= 1024;
-        idx += 1;
-      }
-      return `${size.toFixed(2)} ${units[idx]}`;
-    }
-
-    function makeFileName(title, quality, mime) {
-      const safeTitle = (title || 'x-video').replace(fileNameSafeRe, '_').trim() || 'x-video';
-      const ext = mime && mime.includes('mp4') ? 'mp4' : 'bin';
-      return `${safeTitle}_${quality}.${ext}`;
-    }
-
-    async function triggerDownload(downloadUrl, btnEl) {
-      const originalText = btnEl.textContent;
-      btnEl.disabled = true;
-      btnEl.textContent = '下载中...';
-
-      try {
-        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
-      } catch (err) {
-        alert(`打开失败：${err.message}\n请重新解析后重试。`);
-      } finally {
-        btnEl.disabled = false;
-        btnEl.textContent = originalText;
-      }
-    }
-
-    async function resolve() {
-      const url = urlInput.value.trim();
-      errorEl.textContent = '';
-      resultEl.style.display = 'none';
-      variantsEl.innerHTML = '';
-
-      if (!url) {
-        errorEl.textContent = '请输入推文链接';
-        return;
+      function formatBytes(bytes) {
+        if (!bytes) return "未知大小";
+        const units = ["B", "KB", "MB", "GB"];
+        let size = bytes;
+        let idx = 0;
+        while (size >= 1024 && idx < units.length - 1) {
+          size /= 1024;
+          idx += 1;
+        }
+        return `${size.toFixed(2)} ${units[idx]}`;
       }
 
-      btn.disabled = true;
-      btn.textContent = '解析中...';
+      async function triggerDownload(downloadUrl, btnEl) {
+        const originalText = btnEl.textContent;
+        btnEl.disabled = true;
+        btnEl.textContent = "下载中...";
 
-      try {
-        const response = await fetch('/api/v1/resolve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, prefer: 'mp4' })
-        });
+        try {
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
+          saveTipsEl.innerHTML =
+            "已打开直链。电脑端按 <b>Ctrl + S</b>（Mac: <b>Command + S</b>）保存；移动端长按视频选择“下载/保存到相册”。";
+        } catch (err) {
+          alert(`打开失败：${err.message}\n请重新解析后重试。`);
+        } finally {
+          btnEl.disabled = false;
+          btnEl.textContent = originalText;
+        }
+      }
 
-        const data = await response.json();
-        if (!response.ok) {
-          errorEl.textContent = data.detail || '解析失败';
+      async function resolve() {
+        const url = urlInput.value.trim();
+        errorEl.textContent = "";
+        resultEl.style.display = "none";
+        variantsEl.innerHTML = "";
+
+        if (!url) {
+          errorEl.textContent = "请输入推文链接";
           return;
         }
 
-        titleEl.textContent = data.title;
-        metaEl.textContent = `时长: ${data.duration ?? '未知'} 秒 | 链接有效期: ${data.expires_at}`;
+        resolveBtn.disabled = true;
+        resolveBtn.textContent = "解析中...";
 
-        for (const v of data.variants) {
-          const row = document.createElement('div');
-          row.className = 'variant';
-          row.innerHTML = `
+        try {
+          const response = await fetch("/api/v1/resolve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url, prefer: "mp4" }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            errorEl.textContent = data.detail || "解析失败";
+            return;
+          }
+
+          titleEl.textContent = data.title;
+          metaEl.textContent = `时长: ${data.duration ?? "未知"} 秒 | 链接有效期: ${data.expires_at}`;
+
+          for (const v of data.variants) {
+            const row = document.createElement("div");
+            row.className = "variant";
+            row.innerHTML = `
             <div>
               <div>${v.quality}</div>
               <small>${v.mime} · ${formatBytes(v.size_bytes)}</small>
             </div>
             <button class="link-btn" type="button">直连下载</button>
           `;
-          row.querySelector('.link-btn').addEventListener('click', (event) => {
-            const downloadUrl = v.url;
-            triggerDownload(downloadUrl, event.currentTarget);
-          });
-          variantsEl.appendChild(row);
+            row
+              .querySelector(".link-btn")
+              .addEventListener("click", (event) => {
+                const downloadUrl = v.url;
+                triggerDownload(downloadUrl, event.currentTarget);
+              });
+            variantsEl.appendChild(row);
+          }
+
+          resultEl.style.display = "block";
+        } catch (err) {
+          errorEl.textContent = `请求失败: ${err.message}`;
+        } finally {
+          resolveBtn.disabled = false;
+          resolveBtn.textContent = "解析直链";
         }
-
-        resultEl.style.display = 'block';
-      } catch (err) {
-        errorEl.textContent = `请求失败: ${err.message}`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '解析直链';
       }
-    }
 
-    btn.addEventListener('click', resolve);
-    urlInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') resolve();
-    });
-  </script>
-</body>
+      function clearAll() {
+        urlInput.value = "";
+        errorEl.textContent = "";
+        resultEl.style.display = "none";
+        variantsEl.innerHTML = "";
+        urlInput.focus();
+      }
+
+      async function pasteFromClipboard() {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text && text.trim()) {
+            urlInput.value = text.trim();
+          }
+        } catch (_) {
+          errorEl.textContent = "无法读取剪贴板，请使用 Ctrl+V 粘贴。";
+        }
+      }
+
+      async function autoFillFromClipboard() {
+        try {
+          if (!navigator.clipboard || !navigator.clipboard.readText) return;
+          const text = await navigator.clipboard.readText();
+          if (text && text.trim() && !urlInput.value.trim()) {
+            urlInput.value = text.trim();
+          }
+        } catch (_) {
+          // 自动读取失败时静默，不打扰用户
+        }
+      }
+
+      resolveBtn.addEventListener("click", resolve);
+      pasteBtn.addEventListener("click", pasteFromClipboard);
+      clearBtn.addEventListener("click", clearAll);
+      urlInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") resolve();
+      });
+      autoFillFromClipboard();
+    </script>
+  </body>
 </html>
